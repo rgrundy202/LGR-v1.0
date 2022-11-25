@@ -15,7 +15,7 @@
 #include <string.h>
 
 //Network Constants
-const String networkName = "BOWDOIN-PSK", password = "GbWFVWHm";
+const String networkName = "NAME", password = "PASSWORD";
 const String nhlAPI = "statsapi.web.nhl.com", teamID = "3";
 
 //TimeShift Constants
