@@ -9,7 +9,7 @@ void setup()
   Serial.begin(115200);
   Serial.println("Sketch Start");
 
-  WiFi.begin("Miniwanca", "t3rminus");
+  WiFi.begin("Name", "Password");
 
   Serial.println("Connecting");
   while (WiFi.status() != WL_CONNECTED)
@@ -27,11 +27,10 @@ void setup()
     if (client.connect("api.mysportsfeeds.com", 80)) {
       Serial.println("connected");
       // Make a HTTP request:
-      //base authString ->4bb7ac65-3a28-4e30-8274-e8f421:MYSPORTSFEEDS
-      //encoded auth string -> NGJiN2FjNjUtM2EyOC00ZTMwLTgyNzQtZThmNDIxOk1ZU1BPUlRTRkVFRFM=
+      
       client.println("GET https://api.mysportsfeeds.com/v2.1/pull/nhl/current/games.csv?team=nyr&status=unplayed&limit=1 HTTP/1.1");
       client.println("Host: api.mysportsfeeds.com");
-      client.println("Authorization:Basic NGJiN2FjNjUtM2EyOC00ZTMwLTgyNzQtZThmNDIxOk1ZU1BPUlRTRkVFRFM=");
+      client.println("Authorization:Basic APIKEYHERE=");
       client.println("Connection: close");
       client.println();
       client.readStringUntil('#');
