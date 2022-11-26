@@ -48,23 +48,20 @@ void setup()
   Serial.begin(115200);
   WiFi.mode(WIFI_STA);
   /*Display error messages
-
      -None
      -Wifi Connection Error
-
   */
   while (not Serial.available()){}
-  //String checkString = stripString(Serial.readString());
-  
+  // Wait for startup signal from MEGA
+
   //Wifi Timeout Iterator
-  //-questionable about use due to stall watchdog
   int iter = 0;
 
   //Connects to wifi
-  //WiFi.hostname
   WiFi.begin(networkName, password);
   while (WiFi.status() != WL_CONNECTED)
   {
+    //While not connected
     //Waits a minute then gives error
     if (iter > 120) {
       Serial.println("\nWifi Connection Error");
@@ -73,16 +70,12 @@ void setup()
     delay(500);
     iter ++;
   }
-  //while (not client.connect(nhlAPI, 80)) {}
   /*
      Must make Arduino read till newline so that
-     incidental reboot serial transimission is
+     incidental reboot serial transmission is
      filtered
-
-     -Still need to resolve serial error
-
   */
-  //while (not Serial.available()){}
+  // Send message that there is no error
   Serial.println("\nNone");
 }
 
@@ -91,58 +84,43 @@ void setup()
 
 
 void loop() {
-  //Serial.println(gameURL);
+
   while (not Serial.available()) {}
   //pauses to wait for input
   char input = Serial.read();
   //reads input char from Arduino
-  
 
   switch (input) {
     //Switchboard which can connect commands and strings of commands
-
     case '?': {
         //is there a game?
-        
-        //initial test: good
-        
-        //debug code still there
         client.connect(nhlAPI, 80);
-        //Serial.println(gameURL);
         client.println("GET https://statsapi.web.nhl.com/api/v1/schedule?teamId=3");
         client.println("Host: statsapi.web.nhl.com");
-        //Serial.println(client.readString());
         DeserializationError error = deserializeJson(gameToday, client);
         if (error) {
           Serial.print(F("deserializeJson() failed: "));
           Serial.println(error.f_str());
-    
         }
         const int gamesToday = gameToday["totalGames"];
-
-
         if ( gamesToday != 0) {
           const int gameState = gameToday["dates"][0]["games"][0]["status"]["codedGameState"];
-          //Serial.println(gameState);
           if (gameState == 3 || gameState == 4) {
             Serial.println("true");
             break;
           }
         }
-
         Serial.println("false");
         break;
       }
 
-
     case 'H': {
+        // Get Home Score
         client.connect(nhlAPI, 80);
-        //Serial.println(gameURL);
         client.print(gameURL);
         client.print(gameCode);
         client.println("/linescore");
         client.println("Host: statsapi.web.nhl.com");
-        //Serial.println(client.readString());
 
         DeserializationError error = deserializeJson(currentGame, client);
 
@@ -158,19 +136,18 @@ void loop() {
 
 
     case 'A': {
+        // Get Away Score
         client.connect(nhlAPI, 80);
         client.print(gameURL);
         client.print(gameCode);
         client.println("/linescore");
         client.println("Host: statsapi.web.nhl.com");
-        //Serial.println(client.readString());
 
         DeserializationError error = deserializeJson(currentGame, client);
 
         if (error) {
           Serial.print(F("deserializeJson() failed: "));
           Serial.println(error.f_str());
-          //return;
         }
         const int awayScore = currentGame["teams"]["away"]["goals"];
         Serial.println(awayScore);
@@ -179,24 +156,20 @@ void loop() {
 
 
     case 'P': {
-        //period
+        // Get current period
         client.connect(nhlAPI, 80);
-        //Serial.println(gameURL);
         client.print(gameURL);
         client.print(gameCode);
         client.println("/linescore");
         client.println("Host: statsapi.web.nhl.com");
-        //Serial.println(client.readString());
 
         DeserializationError error = deserializeJson(currentGame, client);
 
         if (error) {
           Serial.print(F("deserializeJson() failed: "));
           Serial.println(error.f_str());
-          //return;
         }
         const int periodConst = currentGame["currentPeriod"];
-        //strcpy(period, periodConst);
         Serial.println(periodConst);
         break;
       }
@@ -213,25 +186,22 @@ void loop() {
 
         */
         client.connect(nhlAPI, 80);
-        //Serial.println(gameURL);
         client.print(gameURL);
         client.print(gameCode);
         client.println("/linescore");
         client.println("Host: statsapi.web.nhl.com");
-        //Serial.println(client.readString());
+
 
         DeserializationError error = deserializeJson(currentGame, client);
 
         if (error) {
           Serial.print(F("deserializeJson() failed: "));
           Serial.println(error.f_str());
-          //return;
         }
         //need to check for game in progress before check
         const char* inInt = currentGame["intermissionInfo"]["inIntermission"];
         const int gameState = gameToday["dates"][0]["games"][0]["status"]["codedGameState"];
         const char* timeRemaining = currentGame["currentPeriodTimeRemaining"];
-        
         
         if (timeRemaining == "END" || timeRemaining == "Final") {
           if (inInt == "true") {
@@ -244,11 +214,8 @@ void loop() {
             break;
           }
         }
-
         Serial.println(timeRemaining);
         gameInProg = true;
-
-
         break;
       }
 
@@ -278,14 +245,10 @@ void gameStart() {
   //https://statsapi.web.nhl.com/api/v1/schedule?teamId=3
 
   //Connects and gets next game code and team ID
-
-  //works sporatically
-  
   client.connect(nhlAPI, 80);
   client.println("GET https://statsapi.web.nhl.com/api/v1/schedule?teamId=3");
   client.println("Host: statsapi.web.nhl.com");
   client.println();
-  //Serial.println(client.readString());
   DeserializationError error = deserializeJson(currentGame, client, DeserializationOption::NestingLimit(11));
 
   if (error) {
@@ -298,26 +261,22 @@ void gameStart() {
   const int gameCodeConst = currentGame["dates"][0]["games"][0]["gamePk"];
   gameCode = gameCodeConst;
 
-  //Serial.println(gameCodeConst);
   const int homeTeamId = currentGame["dates"][0]["games"][0]["teams"]["home"]["team"]["id"];
-  //Serial.println(homeTeamId);
   homeID = homeTeamId;
+
   const int awayTeamId = currentGame["dates"][0]["games"][0]["teams"]["away"]["team"]["id"];
-  //Serial.println(awayTeamId);
   awayID = awayTeamId;
-
-
 
   bool inProgress = true;
   while (inProgress) {
-    //
+    // While there is currently a game
     while (not Serial.available()) {}
+    // Wait for serial connection
     switch (Serial.read()) {
+      //
       case 'H': {
           client.connect("statsapi.web.nhl.com", 80);
           client.println("GET https://statsapi.web.nhl.com/api/v1/teams/" + String(homeTeamId));
-          //client.println(homeTeamID);
-
           client.println("Host: statsapi.web.nhl.com");
           client.println();
           DeserializationError error = deserializeJson(team, client, DeserializationOption::NestingLimit(11));
@@ -326,14 +285,14 @@ void gameStart() {
           //send it back to Arduino
           Serial.println(homeAbbr);
           //home team
-          //Serial.println(Home);
+
           break;
         }
 
       case 'A': {
           client.connect("statsapi.web.nhl.com", 80);
           client.println("GET https://statsapi.web.nhl.com/api/v1/teams/" + String(awayTeamId));
-          //client.println(homeTeamID);
+
           client.println("Host: statsapi.web.nhl.com");
           client.println();
           DeserializationError error = deserializeJson(team, client, DeserializationOption::NestingLimit(11));
@@ -356,7 +315,7 @@ void gameStart() {
 void getNextGame() {
   //Nesting error resulted in helper func.
   //this one creates another switchboard for nextGame API
-  //Finished and debug code cleared
+
   client.connect("statsapi.web.nhl.com", 80);
   client.println("GET https://statsapi.web.nhl.com/api/v1/teams/3?expand=team.schedule.next");
   client.println("Host: statsapi.web.nhl.com");
@@ -417,7 +376,6 @@ void getNextGame() {
           day = strtok(NULL, "T");
           hrs = strtok(NULL, ":");
           String mins = strtok(NULL, ":");
-          //Serial.println(month + "/" + day + " " + hrs + ":" + mins);
           timeZoneShift(hrs, day, month);
           Serial.println(month + "/" + day + " " + hrs + ":" + mins);
           break;
@@ -436,7 +394,6 @@ void getNextGame() {
 
 void timeZoneShift(String hour, String Day, String Month) {
   //Translates time based on value given at top
-  //finished and debug code cleared
 
   int intHrs = NULL;
   int intDay = NULL;
@@ -477,7 +434,6 @@ void timeZoneShift(String hour, String Day, String Month) {
   else {
     hrs = String(intHrs);
   }
-  //Serial.println(day + month + hrs);
 }
 
 String stripString( String string ) {

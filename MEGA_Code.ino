@@ -6,7 +6,6 @@
 
 //Libraries
 #include <LiquidCrystal.h>
-//#include <String.h>
 
 // LCD Constants
 const int rs = 7, en = 8, d4 = 9, d5 = 10, d6 = 11, d7 = 12;
@@ -39,16 +38,22 @@ void setup() {
 
 
 void loop() {
+  // Main loop
 
   if (isGameNow()) {
+  // checks if there is a game
     runGame();
     //run Game();
   }
   else {
+    // Otherwise prints the next on the lcd
     getNextGame();
     delay(30000);
+    // Wait 5 minutes
     image();
+    //display the Rangers logo
     delay(30000);
+    // Wait 5 minutes
   }
 }
 
@@ -62,7 +67,6 @@ void loop() {
 
 
 void welcome() {
-
   //Prints welcome message and connects to serial port
 
   lcd.begin(16, 2);
@@ -79,8 +83,6 @@ void welcome() {
   lcd.print("Connor J. Latona");
   delay(2000);
   lcd.clear();
-  //Serial.readStringUntil("\n");
-  //Serial.print("error?");
   //Loop holding program till esp8266 begins serial tX
 
 }
@@ -117,18 +119,14 @@ void errorCheck() {
     }
 
   }
-  //Serial.readStringUntil("\n");
   
     String errorCode = stripString(Serial.readString());
 
     if (errorCode != "None") {
 
       Serial.println("error detected");
-      //test code^^^^
 
       //if error -> print on lcd
-      //lcd.home();
-      //lcd.autoscroll();
       lcd.print(errorCode);
       delay(600000);
 
@@ -143,7 +141,6 @@ void errorCheck() {
 
     Serial.println('N');
     //ESP responds "ready"
-    //while (not Serial.available()){}
     while( not Serial.available()){}
     Serial.readString();
 
@@ -181,7 +178,9 @@ void errorCheck() {
     //checks for active game
     Serial.read();
     Serial.println('?');
+    // Ask ESP if there is a game
     while (not Serial.available()) {}
+    // Wait for response
     String isGame = stripString(Serial.readString());
     Serial.println(isGame);
     if (isGame == "true" ) {
@@ -257,7 +256,8 @@ void errorCheck() {
     int minNum = 0;
     String api_time = "";
     String timeleft = "";
-    //Serial.println("Light Flash");
+
+    //Flash light to signal beginning of a game
     digitalWrite(lightRelay, HIGH);
     delay(1000);
     digitalWrite(lightRelay, LOW);
@@ -279,24 +279,6 @@ void errorCheck() {
       while (not Serial.available()) {}
       
       String clockTime = stripString(Serial.readString());
-      /*if (clockTime == api_time){
-        secNum --;
-        if(secNum < 0){
-          secNum = 60 - secNum;
-          minNum --;
-        }
-        
-      }
-      else{
-        minNum = clockTime.substring(2).toInt();
-        secNum = clockTime.substring(3,2).toInt();
-        Serial.println(minNum, secNum);
-      }
-      clockTime = api_time;*/
-      
-
-
-          
         if (scoreThrottle == 10) {
           //calls for NYR score
           Serial.println(NYR);
@@ -321,11 +303,7 @@ void errorCheck() {
           while (not Serial.available()) {}
           String period = Serial.readString();
           period = stripString(period);
-          /*if(period != current_period){
-            digitalWrite(lightRelay, HIGH);
-            delay(2000);
-            digitalWrite(lightRelay, LOW);
-          }*/
+
           //Writes Score
           lcd.clear();
           lcd.print("NYR " + NYRScore);
@@ -337,7 +315,6 @@ void errorCheck() {
           if (clockTime == "Final"){
             break;
           }
-
         }
         scoreThrottle += 1;
 
@@ -350,14 +327,12 @@ void errorCheck() {
         lcd.setCursor(10, 1);
         lcd.print(clockTime);
       }
-
-
-
     }
   
 
 
 String stripString( String string ) {
+    // Helper method that removes spaces and common non-printing characters
     string.replace("\n", "");
     string.replace("\r", "");
     string.trim();
@@ -365,40 +340,44 @@ String stripString( String string ) {
   }
   
 void image() {
-lcd.clear();
+    // Displays Rangers Emblem on LCD using generated characters
+    lcd.clear();
 
-byte image08[8] = {B10111, B11111, B11111, B11111, B11111, B11111, B11110, B11111};
-byte image09[8] = {B11101, B11111, B11111, B11111, B11111, B11111, B00000, B00000};
-byte image10[8] = {B11000, B10000, B10000, B10000, B10000, B10000, B10000, B10000};
-byte image07[8] = {B00011, B00001, B00001, B00001, B00001, B00001, B00001, B00001};
-byte image26[8] = {B10000, B10000, B10000, B10000, B00000, B00000, B00000, B00000};
-byte image25[8] = {B10000, B11000, B11100, B11110, B11111, B11110, B01100, B01000};
-byte image23[8] = {B00001, B00001, B00001, B00001, B00000, B00000, B00000, B00000};
-byte image24[8] = {B01111, B00111, B00011, B00001, B10000, B01000, B00100, B00010};
+    // Rangers Shield converted to binary map of pixels. 1 represents dark, 0 represents light.
+    byte image08[8] = {B10111, B11111, B11111, B11111, B11111, B11111, B11110, B11111};
+    byte image09[8] = {B11101, B11111, B11111, B11111, B11111, B11111, B00000, B00000};
+    byte image10[8] = {B11000, B10000, B10000, B10000, B10000, B10000, B10000, B10000};
+    byte image07[8] = {B00011, B00001, B00001, B00001, B00001, B00001, B00001, B00001};
+    byte image26[8] = {B10000, B10000, B10000, B10000, B00000, B00000, B00000, B00000};
+    byte image25[8] = {B10000, B11000, B11100, B11110, B11111, B11110, B01100, B01000};
+    byte image23[8] = {B00001, B00001, B00001, B00001, B00000, B00000, B00000, B00000};
+    byte image24[8] = {B01111, B00111, B00011, B00001, B10000, B01000, B00100, B00010};
 
-lcd.createChar(0, image08);
-lcd.createChar(1, image09);
-lcd.createChar(2, image10);
-lcd.createChar(3, image07);
-lcd.createChar(4, image26);
-lcd.createChar(5, image25);
-lcd.createChar(6, image23);
-lcd.createChar(7, image24);
+    // Takes bits and stores as characters in lcd memory
+    lcd.createChar(0, image08);
+    lcd.createChar(1, image09);
+    lcd.createChar(2, image10);
+    lcd.createChar(3, image07);
+    lcd.createChar(4, image26);
+    lcd.createChar(5, image25);
+    lcd.createChar(6, image23);
+    lcd.createChar(7, image24);
 
-lcd.setCursor(7, 0);
-lcd.write(byte(0));
-lcd.setCursor(8, 0);
-lcd.write(byte(1));
-lcd.setCursor(9, 0);
-lcd.write(byte(2));
-lcd.setCursor(6, 0);
-lcd.write(byte(3));
-lcd.setCursor(9, 1);
-lcd.write(byte(4));
-lcd.setCursor(8, 1);
-lcd.write(byte(5));
-lcd.setCursor(6, 1);
-lcd.write(byte(6));
-lcd.setCursor(7, 1);
-lcd.write(byte(7));
+    // Moves cursor to each position is shield and writes generated character
+    lcd.setCursor(7, 0);
+    lcd.write(byte(0));
+    lcd.setCursor(8, 0);
+    lcd.write(byte(1));
+    lcd.setCursor(9, 0);
+    lcd.write(byte(2));
+    lcd.setCursor(6, 0);
+    lcd.write(byte(3));
+    lcd.setCursor(9, 1);
+    lcd.write(byte(4));
+    lcd.setCursor(8, 1);
+    lcd.write(byte(5));
+    lcd.setCursor(6, 1);
+    lcd.write(byte(6));
+    lcd.setCursor(7, 1);
+    lcd.write(byte(7));
 }
